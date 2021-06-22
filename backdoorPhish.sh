@@ -159,6 +159,16 @@ function dependencies(){
         echo -e "${IWhite}Descargue la herramienta nuevamente...${Color_Off}"
         tput cnorm; exit 1
     fi
+    if [[ ! -e templates/whatsapp.html ]]; then
+        echo -e "\n${LBlue}[${BRed}✘${LBlue}] ${BRed}No existe plantilla Whatsapp${Color_Off}"
+        echo -e "${IWhite}Descargue la herramienta nuevamente...${Color_Off}"
+        tput cnorm; exit 1
+    fi
+    if [[ ! -e templates/wetransfer.html ]]; then
+        echo -e "\n${LBlue}[${BRed}✘${LBlue}] ${BRed}No existe plantilla Wetransfer${Color_Off}"
+        echo -e "${IWhite}Descargue la herramienta nuevamente...${Color_Off}"
+        tput cnorm; exit 1
+    fi
     sleep 3
 }
 
